@@ -46,22 +46,28 @@
 
         <!-- Mobile Touch Controls (Shown only on touchscreen devices) -->
         <div id="mobile-controls">
-            <!-- Left Button -->
-            <div id="btn-touch-left" class="mobile-touch-btn" role="button" aria-label="Move Left">
-                <span class="icon">◀</span>
-                <span class="btn-label">LEFT</span>
+            <!-- Left Side: Horizontal Movement (LEFT / RIGHT) -->
+            <div class="mobile-cluster-left">
+                <div id="btn-touch-left" class="mobile-touch-btn" role="button" aria-label="Move Left">
+                    <span class="icon">⬅️</span>
+                    <span class="btn-label">LEFT</span>
+                </div>
+                <div id="btn-touch-right" class="mobile-touch-btn" role="button" aria-label="Move Right">
+                    <span class="icon">➡️</span>
+                    <span class="btn-label">RIGHT</span>
+                </div>
             </div>
 
-            <!-- Jump Button (Centered) -->
-            <div id="btn-touch-jump" class="mobile-touch-btn btn-action-jump" role="button" aria-label="Jump">
-                <span class="icon">▲</span>
-                <span class="btn-label">JUMP</span>
-            </div>
-
-            <!-- Right Button -->
-            <div id="btn-touch-right" class="mobile-touch-btn" role="button" aria-label="Move Right">
-                <span class="icon">▶</span>
-                <span class="btn-label">RIGHT</span>
+            <!-- Right Side: Vertical Movement (UP / DOWN) -->
+            <div class="mobile-cluster-right">
+                <div id="btn-touch-jump" class="mobile-touch-btn btn-action-jump" role="button" aria-label="Jump / Up">
+                    <span class="icon">⬆️</span>
+                    <span class="btn-label">UP</span>
+                </div>
+                <div id="btn-touch-down" class="mobile-touch-btn btn-action-down" role="button" aria-label="Down / Fast Fall">
+                    <span class="icon">⬇️</span>
+                    <span class="btn-label">DOWN</span>
+                </div>
             </div>
         </div>
 

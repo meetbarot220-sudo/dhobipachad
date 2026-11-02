@@ -195,13 +195,13 @@ body, html {
 /* MOBILE TOUCH CONTROLS (Displayed only on touch/mobile devices) */
 #mobile-controls {
     position: absolute;
-    bottom: calc(50px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(48px + env(safe-area-inset-bottom, 0px));
     left: 0;
     width: 100%;
-    padding: 0 30px;
+    padding: 0 clamp(20px, 4vw, 36px);
     display: none; /* Hidden by default on desktop */
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     pointer-events: none;
     z-index: 30;
     box-sizing: border-box;
@@ -225,15 +225,33 @@ body.touch-device #mobile-controls {
     }
 }
 
+/* Left Cluster: Horizontal Movement (LEFT / RIGHT) */
+.mobile-cluster-left {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    pointer-events: none;
+}
+
+/* Right Cluster: Vertical Movement (UP / DOWN) */
+.mobile-cluster-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    pointer-events: none;
+}
+
 .mobile-touch-btn {
     pointer-events: auto;
-    width: 78px;
-    height: 78px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.16);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 3px solid rgba(255, 255, 255, 0.4);
+    border: 3px solid rgba(255, 255, 255, 0.45);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -245,18 +263,51 @@ body.touch-device #mobile-controls {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
-    transition: transform 0.06s ease, background 0.06s ease, border-color 0.06s ease;
+    transition: transform 0.06s ease, background 0.06s ease, border-color 0.06s ease, box-shadow 0.06s ease;
 }
 
 .mobile-touch-btn.btn-action-jump {
-    width: 92px;
-    height: 92px;
+    width: 76px;
+    height: 76px;
     background: rgba(0, 245, 212, 0.28);
     border-color: #00f5d4;
-    box-shadow: 0 8px 26px rgba(0, 245, 212, 0.4), inset 0 2px 6px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 26px rgba(0, 245, 212, 0.42), inset 0 2px 6px rgba(255, 255, 255, 0.35);
+}
+
+.mobile-touch-btn.btn-action-down {
+    width: 68px;
+    height: 68px;
+    background: rgba(247, 37, 133, 0.24);
+    border-color: #f72585;
+    box-shadow: 0 8px 24px rgba(247, 37, 133, 0.38), inset 0 2px 6px rgba(255, 255, 255, 0.25);
 }
 
 .mobile-touch-btn.pressed {
+    transform: scale(0.90);
+    background: rgba(255, 255, 255, 0.45);
+    border-color: #ffffff;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.6);
+}
+
+.mobile-touch-btn .icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.mobile-touch-btn.btn-action-jump .icon {
+    font-size: 26px;
+}
+
+.mobile-touch-btn.btn-action-down .icon {
+    font-size: 24px;
+}
+
+.mobile-touch-btn .btn-label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+    opacity: 0.95;
     transform: scale(0.90);
     background: rgba(255, 255, 255, 0.42);
     border-color: #ffffff;
@@ -432,29 +483,8 @@ body.touch-device #mobile-controls {
     }
 
     #mobile-controls {
-        bottom: calc(48px + env(safe-area-inset-bottom, 0px));
-        padding: 0 clamp(16px, 4vw, 28px);
-    }
-
-    .mobile-touch-btn {
-        width: 74px;
-        height: 74px;
-    }
-
-    .mobile-touch-btn.btn-action-jump {
-        width: 88px;
-        height: 88px;
-    }
-
-    .mobile-touch-btn .icon {
-        font-size: 24px;
-    }
-}
-
-@media (max-width: 400px) {
-    #mobile-controls {
-        bottom: calc(42px + env(safe-area-inset-bottom, 0px));
-        padding: 0 12px;
+        bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+        padding: 0 clamp(16px, 3.5vw, 28px);
     }
 
     .mobile-touch-btn {
@@ -463,7 +493,46 @@ body.touch-device #mobile-controls {
     }
 
     .mobile-touch-btn.btn-action-jump {
-        width: 82px;
-        height: 82px;
+        width: 72px;
+        height: 72px;
+    }
+
+    .mobile-touch-btn.btn-action-down {
+        width: 64px;
+        height: 64px;
+    }
+
+    .mobile-touch-btn .icon {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 400px) {
+    #mobile-controls {
+        bottom: calc(38px + env(safe-area-inset-bottom, 0px));
+        padding: 0 10px;
+    }
+
+    .mobile-cluster-left {
+        gap: 8px;
+    }
+
+    .mobile-cluster-right {
+        gap: 6px;
+    }
+
+    .mobile-touch-btn {
+        width: 62px;
+        height: 62px;
+    }
+
+    .mobile-touch-btn.btn-action-jump {
+        width: 66px;
+        height: 66px;
+    }
+
+    .mobile-touch-btn.btn-action-down {
+        width: 58px;
+        height: 58px;
     }
 }

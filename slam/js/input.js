@@ -56,6 +56,7 @@ class InputManager {
         this.setupTouchButton('btn-touch-left', (active) => { this.left = active; });
         this.setupTouchButton('btn-touch-right', (active) => { this.right = active; });
         this.setupTouchButton('btn-touch-jump', (active) => { if (active) this.jumpPressed = true; });
+        this.setupTouchButton('btn-touch-down', (active) => { this.down = active; });
     }
 
     setupTouchButton(elementId, callback) {
@@ -127,9 +128,14 @@ class InputManager {
         if (this.keys['KeyA'] || this.keys['ArrowLeft'] || this.left) moveX -= 1;
         if (this.keys['KeyD'] || this.keys['ArrowRight'] || this.right) moveX += 1;
 
-        // Platform Drop Through
+        // Platform Drop Through & Fast Fall
         const wantDown = this.keys['KeyS'] || this.keys['ArrowDown'] || this.down;
         player.dropThrough = wantDown;
+
+        // Fast fall downward when airborne and DOWN is held
+        if (wantDown && !player.grounded) {
+            player.vy = Math.max(player.vy + 2200 * dt, 480);
+        }
 
         // Apply movement forces
         if (player.knockbackTimer <= 0 && moveX !== 0) {
