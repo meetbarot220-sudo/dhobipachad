@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Squish: 60-Second Survival Brawler</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- TOP HUD -->
+        <header id="hud-header">
+            <!-- Left: Lives Display -->
+            <div class="hud-card">
+                <div class="lives-container">
+                    <span class="lives-label">LIVES:</span>
+                    <span id="lives-display">❤️❤️❤️</span>
+                </div>
+            </div>
+
+            <!-- Center: 60s Countdown Timer -->
+            <div class="timer-container">
+                <span class="timer-label">SURVIVE</span>
+                <span id="match-timer">60</span>
+            </div>
+
+            <!-- Right: Score & Audio Control -->
+            <div class="right-hud">
+                <div class="hud-card">
+                    <span id="score-display">SCORE: 0000</span>
+                </div>
+                <button id="mute-btn" class="icon-btn" title="Toggle Sound" aria-label="Toggle Sound">🔊</button>
+            </div>
+        </header>
+
+        <!-- Desktop Controls Hint (Hidden on mobile) -->
+        <div id="desktop-controls-hint">
+            <div><kbd>A</kbd> <kbd>D</kbd> or <kbd>◀</kbd> <kbd>▶</kbd> Move</div>
+            <div><kbd>SPACE</kbd> Jump / Double Jump</div>
+            <div><kbd>S</kbd> or <kbd>▼</kbd> Drop Platform</div>
+            <div><kbd>STOMP</kbd> Jump on Bots to Squish & Score!</div>
+        </div>
+
+        <!-- Mobile Touch Controls (Shown only on touchscreen devices) -->
+        <div id="mobile-controls">
+            <!-- Left/Right Movement -->
+            <div class="touch-cluster">
+                <div id="btn-touch-left" class="mobile-touch-btn" role="button">
+                    <span class="icon">◀</span>
+                    <span class="btn-label">LEFT</span>
+                </div>
+                <div id="btn-touch-right" class="mobile-touch-btn" role="button">
+                    <span class="icon">▶</span>
+                    <span class="btn-label">RIGHT</span>
+                </div>
+            </div>
+
+            <!-- Right Jump Button -->
+            <div class="touch-cluster">
+                <div id="btn-touch-jump" class="mobile-touch-btn btn-action-jump" role="button">
+                    <span class="icon">🦘</span>
+                    <span class="btn-label">JUMP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal (When 3 Lives Lost) -->
+        <div id="game-over-screen" class="overlay-screen hidden">
+            <div class="modal-card game-over">
+                <h1>GAME OVER</h1>
+                <p>The RED player lost all 3 lives! The bots squished you.</p>
+                <div id="game-over-stats" class="stats-text">FINAL SCORE: 0000 | Time Survived: 0s</div>
+                <button id="restart-btn" class="btn-primary">TRY AGAIN</button>
+            </div>
+        </div>
+
+        <!-- Victory Modal (When 60 Seconds Reached) -->
+        <div id="victory-screen" class="overlay-screen hidden">
+            <div class="modal-card victory">
+                <h1>TIME SURVIVED!</h1>
+                <p>You survived the full 60 seconds against the relentless bots!</p>
+                <div id="victory-stats" class="stats-text">FINAL SCORE: 0000 | Lives Left: 3</div>
+                <button id="victory-restart-btn" class="btn-primary victory-btn">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modular Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/arena.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
