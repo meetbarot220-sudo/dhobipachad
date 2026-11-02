@@ -35,6 +35,13 @@ class SquishGame {
         this.respawnQueue = [];
 
         window.addEventListener('resize', () => this.setupCanvas());
+        window.addEventListener('orientationchange', () => this.setupCanvas());
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => this.setupCanvas());
+            window.visualViewport.addEventListener('scroll', () => this.setupCanvas());
+        }
+        document.addEventListener('fullscreenchange', () => this.setupCanvas());
+
         this.setupUI();
         this.startMatch();
 
@@ -43,8 +50,23 @@ class SquishGame {
     }
 
     setupCanvas() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        // Accurately measure the actual visible viewport dimensions (excluding browser address and navigation bars)
+        let w = window.innerWidth;
+        let h = window.innerHeight;
+
+        if (window.visualViewport) {
+            w = Math.round(window.visualViewport.width);
+            h = Math.round(window.visualViewport.height);
+        }
+
+        const container = document.getElementById('game-container');
+        if (container) {
+            container.style.width = `${w}px`;
+            container.style.height = `${h}px`;
+        }
+
+        this.canvas.width = w;
+        this.canvas.height = h;
     }
 
     setupUI() {
