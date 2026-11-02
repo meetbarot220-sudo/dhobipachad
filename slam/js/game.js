@@ -131,26 +131,38 @@ class SquishGame {
         }
     }
 
-    onBotDied(bot) {
-        // Combo and Score
-        this.comboCount++;
-        this.comboTimer = 3.0; // 3 seconds window to chain combos
-        const pts = 100 * this.comboCount;
-        this.score += pts;
+    onBotDied(bot, killedByPlayer = false) {
+        if (killedByPlayer) {
+            // Combo and Score only awarded when the PLAYER kills the bot
+            this.comboCount++;
+            this.comboTimer = 3.0; // 3 seconds window to chain combos
+            const pts = 100 * this.comboCount;
+            this.score += pts;
 
-        const comboText = this.comboCount > 1 ? `+${pts} COMBO x${this.comboCount}!` : `+${pts}`;
-        if (window.particleSystem) {
-            window.particleSystem.addFloatingText(comboText, bot.x, bot.y - 35, bot.color, this.comboCount > 1 ? 1.3 : 1.1);
+            const comboText = this.comboCount > 1 ? `+${pts} COMBO x${this.comboCount}!` : `+${pts}`;
+            if (window.particleSystem) {
+                window.particleSystem.addFloatingText(comboText, bot.x, bot.y - 35, bot.color, this.comboCount > 1 ? 1.3 : 1.1);
+            }
+            this.updateHUD();
+        } else {
+            // Bot was squished by another bot!
+            if (window.particleSystem) {
+                window.particleSystem.addFloatingText('SQUISHED!', bot.x, bot.y - 35, bot.color, 1.1);
+            }
         }
 
-        this.updateHUD();
+        // Prevent duplicate queue entries for the same bot
+        if (this.respawnQueue.some(item => item.character.id === bot.id)) {
+            return;
+        }
 
-        // Infinite bot respawn after 1.6s
+        // Infinite bot respawn after 0.5-1.5s (1.0s delay)
+        // Bot retains its original identity, color, and properties
         const spawnPt = this.arena.getRandomSpawnPoint();
         this.respawnQueue.push({
             character: bot,
-            timer: 1.6,
-            invuln: 1.0,
+            timer: 1.0,
+            invuln: 1.2,
             spawnX: spawnPt.x,
             spawnY: spawnPt.y
         });
@@ -220,7 +232,9 @@ class SquishGame {
                         if (c2.isPlayer) {
                             this.onPlayerDied();
                         } else if (c1.isPlayer) {
-                            this.onBotDied(c2);
+                            this.onBotDied(c2, true); // true = killed by player (gives score)
+                        } else {
+                            this.onBotDied(c2, false); // false = bot killed by bot (respawns!)
                         }
                         continue;
                     }
@@ -235,7 +249,9 @@ class SquishGame {
                         if (c1.isPlayer) {
                             this.onPlayerDied();
                         } else if (c2.isPlayer) {
-                            this.onBotDied(c1);
+                            this.onBotDied(c1, true); // true = killed by player (gives score)
+                        } else {
+                            this.onBotDied(c1, false); // false = bot killed by bot (respawns!)
                         }
                         continue;
                     }
@@ -312,6 +328,9 @@ class SquishGame {
 
             this.updateHUD();
         }
+
+        // Arena background animation (motes & subtle lighting)
+        this.arena.update(dt);
 
         // Camera & Particles
         this.camera.update(this.player, dt);

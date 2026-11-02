@@ -1,8 +1,7 @@
-// Clean Input Manager: Movement & Jump only (No attack buttons)
+// Clean Input Manager: Responsive Movement & Jump with Robust Mobile Touch Handling
 class InputManager {
     constructor() {
         this.keys = {};
-        this.touchActive = false;
 
         // Control states
         this.left = false;
@@ -11,7 +10,25 @@ class InputManager {
         this.jumpPressed = false;
 
         this.initKeyboard();
+        this.detectTouchDevice();
         this.initTouch();
+    }
+
+    detectTouchDevice() {
+        // Immediate detection of mobile/touch capability
+        const isTouch = ('ontouchstart' in window) ||
+                        (navigator.maxTouchPoints > 0) ||
+                        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+        if (isTouch) {
+            document.body.classList.add('touch-device');
+        }
+
+        // Failsafe: on first touch anywhere, mark as touch-device and resume audio
+        window.addEventListener('touchstart', () => {
+            document.body.classList.add('touch-device');
+            if (window.soundEngine) window.soundEngine.resume();
+        }, { passive: true, once: true });
     }
 
     initKeyboard() {
@@ -35,16 +52,7 @@ class InputManager {
     }
 
     initTouch() {
-        // Detect touch device
-        window.addEventListener('touchstart', () => {
-            if (!this.touchActive) {
-                this.touchActive = true;
-                this.updateMobileVisibility(true);
-            }
-            if (window.soundEngine) window.soundEngine.resume();
-        }, { passive: true, once: true });
-
-        // Bind Mobile Touch Buttons
+        // Bind Mobile Touch Buttons with robust multi-touch support
         this.setupTouchButton('btn-touch-left', (active) => { this.left = active; });
         this.setupTouchButton('btn-touch-right', (active) => { this.right = active; });
         this.setupTouchButton('btn-touch-jump', (active) => { if (active) this.jumpPressed = true; });
@@ -54,37 +62,67 @@ class InputManager {
         const btn = document.getElementById(elementId);
         if (!btn) return;
 
-        const handleStart = (e) => {
-            e.preventDefault();
+        let activeTouchId = null;
+
+        const startAction = (id) => {
+            activeTouchId = id;
             btn.classList.add('pressed');
             callback(true);
         };
 
-        const handleEnd = (e) => {
-            e.preventDefault();
+        const endAction = () => {
+            activeTouchId = null;
             btn.classList.remove('pressed');
             callback(false);
         };
 
-        btn.addEventListener('touchstart', handleStart, { passive: false });
-        btn.addEventListener('touchend', handleEnd, { passive: false });
-        btn.addEventListener('touchcancel', handleEnd, { passive: false });
-        btn.addEventListener('mousedown', handleStart);
-        btn.addEventListener('mouseup', handleEnd);
-        btn.addEventListener('mouseleave', handleEnd);
-    }
+        // Touch Start
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (activeTouchId === null && e.changedTouches.length > 0) {
+                startAction(e.changedTouches[0].identifier);
+            }
+        }, { passive: false });
 
-    updateMobileVisibility(show) {
-        const controls = document.getElementById('mobile-controls');
-        if (controls) {
-            controls.style.display = show ? 'flex' : 'none';
-        }
+        // Touch End
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === activeTouchId) {
+                    endAction();
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        // Touch Cancel (interrupted gesture / off-screen)
+        btn.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === activeTouchId) {
+                    endAction();
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        // Mouse Fallback for testing in responsive emulator
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startAction('mouse');
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (activeTouchId === 'mouse') {
+                endAction();
+            }
+        });
     }
 
     update(player, dt) {
         if (!player || !player.isAlive) return;
 
-        // Horizontal Movement
+        // Horizontal Movement (Keyboard or Touch)
         let moveX = 0;
         if (this.keys['KeyA'] || this.keys['ArrowLeft'] || this.left) moveX -= 1;
         if (this.keys['KeyD'] || this.keys['ArrowRight'] || this.right) moveX += 1;
