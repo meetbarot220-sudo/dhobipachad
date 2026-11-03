@@ -3,9 +3,9 @@ class BotAIController {
     constructor() {
         // Individual bot personalities
         this.personalities = {
-            1: { type: 'jumper', jumpTendency: 0.85, speedMult: 1.05 }, // Green Bot: High Hopper
+            1: { type: 'jumper', jumpTendency: 0.85, speedMult: 1.0 }, // Green Bot: High Hopper
             2: { type: 'sprinter', jumpTendency: 0.65, speedMult: 1.15 }, // Blue Bot: Fast Charger
-            3: { type: 'highground', jumpTendency: 0.90, speedMult: 1.0 } // Yellow Bot: Ledge Pouncer
+            3: { type: 'highground', jumpTendency: 0.90, speedMult: 0.95 } // Yellow Bot: Ledge Pouncer
         };
     }
 

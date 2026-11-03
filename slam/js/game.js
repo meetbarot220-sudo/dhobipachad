@@ -7,7 +7,7 @@ class SquishGame {
         this.setupCanvas();
 
         // Game Systems
-        this.arena = new Arena();
+        this.arena = new Arena(this.canvas.width, this.canvas.height);
         this.particleSystem = new ParticleSystem(300, 40);
         window.particleSystem = this.particleSystem;
 
@@ -67,19 +67,23 @@ class SquishGame {
 
         this.canvas.width = w;
         this.canvas.height = h;
+
+        if (this.arena) {
+            this.arena.resize(w, h);
+            if (this.characters && this.characters.length > 0) {
+                for (let i = 0; i < this.characters.length; i++) {
+                    const c = this.characters[i];
+                    if (c.x > this.arena.width - 40) c.x = this.arena.width - 40;
+                    if (c.x < 40) c.x = 40;
+                }
+            }
+        }
+        if (this.camera) {
+            this.camera.onResize();
+        }
     }
 
     setupUI() {
-        const restartBtn = document.getElementById('restart-btn');
-        if (restartBtn) {
-            restartBtn.addEventListener('click', () => this.startMatch());
-        }
-
-        const victoryBtn = document.getElementById('victory-restart-btn');
-        if (victoryBtn) {
-            victoryBtn.addEventListener('click', () => this.startMatch());
-        }
-
         const muteBtn = document.getElementById('mute-btn');
         if (muteBtn) {
             muteBtn.addEventListener('click', () => {
@@ -114,22 +118,26 @@ class SquishGame {
         this.characters = [];
         this.bots = [];
 
+        const centerX = Math.round(this.arena.width / 2);
+        const midLeftX = Math.round(this.arena.width * 0.22);
+        const midRightX = Math.round(this.arena.width * 0.78);
+
         // 1. RED PLAYER
-        this.player = new Character(0, true, '#ff1744', 'YOU', 600, 430);
+        this.player = new Character(0, true, '#ff1744', 'YOU', centerX, 430);
         this.characters.push(this.player);
 
         // 2. GREEN BOT (#00e676)
-        const bot1 = new Character(1, false, '#00e676', 'Green Bot', 250, 310);
+        const bot1 = new Character(1, false, '#00e676', 'Green Bot', midLeftX, 310);
         this.bots.push(bot1);
         this.characters.push(bot1);
 
         // 3. BLUE BOT (#00b0ff)
-        const bot2 = new Character(2, false, '#00b0ff', 'Blue Bot', 950, 310);
+        const bot2 = new Character(2, false, '#00b0ff', 'Blue Bot', midRightX, 310);
         this.bots.push(bot2);
         this.characters.push(bot2);
 
         // 4. YELLOW BOT (#ffd600)
-        const bot3 = new Character(3, false, '#ffd600', 'Yellow Bot', 600, 180);
+        const bot3 = new Character(3, false, '#ffd600', 'Yellow Bot', centerX, 180);
         this.bots.push(bot3);
         this.characters.push(bot3);
     }
@@ -147,7 +155,7 @@ class SquishGame {
                 character: this.player,
                 timer: 1.2,
                 invuln: 2.2,
-                spawnX: 600,
+                spawnX: Math.round(this.arena.width / 2),
                 spawnY: 430
             });
         }
@@ -370,8 +378,8 @@ class SquishGame {
         // Apply Camera Transform
         this.camera.apply(this.ctx);
 
-        // 1. Draw Arena Geometry
-        this.arena.draw(this.ctx);
+        // 1. Draw Nature Background & Arena Platforms (with subtle camera parallax)
+        this.arena.draw(this.ctx, this.camera);
 
         // 2. Draw 4 Characters
         for (let i = 0; i < this.characters.length; i++) {

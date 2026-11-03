@@ -20,6 +20,15 @@ class Camera {
         this.shakeOffsetY = 0;
     }
 
+    onResize() {
+        const scaleX = this.canvas.width / this.arena.width;
+        const scaleY = this.canvas.height / this.arena.height;
+        this.targetZoom = Math.min(scaleX, scaleY);
+        this.zoom = this.targetZoom;
+        this.x = this.arena.width / 2;
+        this.y = this.arena.height / 2;
+    }
+
     addShake(amount) {
         this.trauma = Math.min(1.0, this.trauma + amount);
     }
@@ -27,18 +36,21 @@ class Camera {
     update(player, dt) {
         if (!player) return;
 
-        // Calculate responsive target zoom to fit arena nicely on any screen aspect ratio
-        const scaleX = this.canvas.width / (this.arena.width * 1.05);
-        const scaleY = this.canvas.height / (this.arena.height * 1.05);
-        const baseZoom = Math.max(0.8, Math.min(scaleX, scaleY));
+        // Auto-scale zoom so the arena cleanly fills the screen width and height
+        const scaleX = this.canvas.width / this.arena.width;
+        const scaleY = this.canvas.height / this.arena.height;
+        const baseZoom = Math.min(scaleX, scaleY);
 
         this.targetZoom = baseZoom;
-        this.zoom += (this.targetZoom - this.zoom) * (dt * 5);
+        this.zoom += (this.targetZoom - this.zoom) * (dt * 6);
 
-        // Smoothly follow player with slight lookahead
-        const lookAheadX = player.vx * 0.12;
-        this.targetX = player.x + lookAheadX;
-        this.targetY = player.y - 20;
+        // Keep camera centered on the broader arena with subtle player focus
+        const arenaCenterX = this.arena.width / 2;
+        const arenaCenterY = this.arena.height / 2;
+
+        const lookAheadX = player.vx * 0.08;
+        this.targetX = arenaCenterX + lookAheadX * 0.35;
+        this.targetY = arenaCenterY + (player.y - arenaCenterY) * 0.25;
 
         // Smooth Lerp
         const lerpFactor = Math.min(1.0, 8 * dt);
@@ -54,16 +66,16 @@ class Camera {
         const minCamY = halfVisibleH;
         const maxCamY = this.arena.height - halfVisibleH;
 
-        if (maxCamX > minCamX) {
+        if (maxCamX >= minCamX) {
             this.x = Math.max(minCamX, Math.min(maxCamX, this.x));
         } else {
-            this.x = this.arena.width / 2;
+            this.x = arenaCenterX;
         }
 
-        if (maxCamY > minCamY) {
+        if (maxCamY >= minCamY) {
             this.y = Math.max(minCamY, Math.min(maxCamY, this.y));
         } else {
-            this.y = this.arena.height / 2;
+            this.y = arenaCenterY;
         }
 
         // Screen Shake decay

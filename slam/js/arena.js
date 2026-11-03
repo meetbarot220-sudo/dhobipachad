@@ -20,72 +20,102 @@ if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D
     };
 }
 
-// Compact Arcade Arena with polished synthwave atmosphere, platforms, and spawn points
+// Compact Arcade Arena with polished cartoon nature background and platforms
 class Arena {
-    constructor() {
-        this.width = 1200;
+    constructor(canvasWidth, canvasHeight) {
         this.height = 750;
+        this.bgTime = 0;
+        this.ambientMotes = [];
 
-        // Outer boundaries (Solid enclosing walls and ceiling)
+        this.resize(canvasWidth || 1400, canvasHeight || 750);
+
+        // Nature Background: Soft floating dandelion seeds / pollen sparkles
+        for (let i = 0; i < 28; i++) {
+            this.ambientMotes.push({
+                x: Math.random() * (this.width + 400) - 200,
+                y: Math.random() * this.height,
+                radius: Math.random() * 2.0 + 1.2,
+                speedY: Math.random() * 12 + 8,
+                speedX: (Math.random() - 0.5) * 6,
+                phase: Math.random() * Math.PI * 2,
+                alpha: Math.random() * 0.35 + 0.25
+            });
+        }
+    }
+
+    resize(canvasWidth, canvasHeight) {
+        const aspect = (canvasWidth && canvasHeight) ? (canvasWidth / canvasHeight) : (16 / 9);
+        let targetW = 1400;
+        if (aspect >= 1.2) {
+            // Desktop/landscape: match screen aspect ratio so the arena seamlessly fills 100% of the screen width
+            targetW = Math.max(1360, Math.round(750 * aspect));
+        } else {
+            // Portrait mobile
+            targetW = 1200;
+        }
+
+        if (this.width !== targetW) {
+            this.initLayout(targetW);
+        }
+    }
+
+    initLayout(width) {
+        this.width = width || 1400;
+        this.height = 750;
+        const W = this.width;
+
+        // Outer boundaries (Solid side walls, upper wall removed)
+        const wallW = 32;
         this.walls = [
             // Left Wall
-            { x: 30, y: 0, w: 40, h: 750, color: '#1a103c' },
+            { x: 0, y: -1000, w: wallW, h: 1750, color: '#1a2233' },
             // Right Wall
-            { x: 1130, y: 0, w: 40, h: 750, color: '#1a103c' },
-            // Ceiling
-            { x: 30, y: 20, w: 1140, h: 30, color: '#1a103c' }
+            { x: W - wallW, y: -1000, w: wallW, h: 1750, color: '#1a2233' }
         ];
 
-        // Platforms layout: compact, multi-level for frequent jump encounters
+        // Platforms layout: natural proportions, slightly broader spacing
+        const centerStageW = Math.min(420, Math.round(W * 0.28));
+        const topCenterW = Math.min(340, Math.round(W * 0.23));
+        const lowerLedgeW = Math.min(300, Math.round(W * 0.20));
+        const midLedgeW = Math.min(270, Math.round(W * 0.18));
+        const highLedgeW = Math.min(210, Math.round(W * 0.14));
+
+        const sideMargin = Math.max(70, Math.round(W * 0.065));
+        const midMargin = Math.max(150, Math.round(W * 0.13));
+        const highMargin = Math.max(50, Math.round(W * 0.05));
+
         this.platforms = [
             // Main Bottom Ground
-            { id: 'floor', x: 70, y: 680, w: 1060, h: 50, type: 'solid', color: '#2d1b69', topColor: '#00f5d4' },
+            { id: 'floor', x: wallW, y: 680, w: W - (wallW * 2), h: 70, type: 'solid', color: '#241a4a', topColor: '#00f5d4' },
 
             // Lower Side Ledges
-            { id: 'lower_left', x: 120, y: 530, w: 260, h: 22, type: 'jumpthrough', color: '#44318d', topColor: '#ff007f' },
-            { id: 'lower_right', x: 820, y: 530, w: 260, h: 22, type: 'jumpthrough', color: '#44318d', topColor: '#ff007f' },
+            { id: 'lower_left', x: sideMargin, y: 530, w: lowerLedgeW, h: 22, type: 'jumpthrough', color: '#312363', topColor: '#ff007f' },
+            { id: 'lower_right', x: W - sideMargin - lowerLedgeW, y: 530, w: lowerLedgeW, h: 22, type: 'jumpthrough', color: '#312363', topColor: '#ff007f' },
 
             // Center Floating Battle Stage
-            { id: 'center_stage', x: 420, y: 470, w: 360, h: 24, type: 'jumpthrough', color: '#3a0ca3', topColor: '#fee440' },
+            { id: 'center_stage', x: Math.round((W - centerStageW) / 2), y: 470, w: centerStageW, h: 24, type: 'jumpthrough', color: '#2a1e58', topColor: '#fee440' },
 
             // Mid Side Platforms
-            { id: 'mid_left', x: 180, y: 350, w: 240, h: 22, type: 'jumpthrough', color: '#560bad', topColor: '#00f5d4' },
-            { id: 'mid_right', x: 780, y: 350, w: 240, h: 22, type: 'jumpthrough', color: '#560bad', topColor: '#00f5d4' },
+            { id: 'mid_left', x: midMargin, y: 350, w: midLedgeW, h: 22, type: 'jumpthrough', color: '#312363', topColor: '#00f5d4' },
+            { id: 'mid_right', x: W - midMargin - midLedgeW, y: 350, w: midLedgeW, h: 22, type: 'jumpthrough', color: '#312363', topColor: '#00f5d4' },
 
             // Top Crown Overpass
-            { id: 'top_center', x: 450, y: 220, w: 300, h: 22, type: 'jumpthrough', color: '#7209b7', topColor: '#ffbe0b' },
+            { id: 'top_center', x: Math.round((W - topCenterW) / 2), y: 220, w: topCenterW, h: 22, type: 'jumpthrough', color: '#442b78', topColor: '#ffbe0b' },
 
             // High Corner Perches
-            { id: 'high_left', x: 90, y: 190, w: 170, h: 20, type: 'jumpthrough', color: '#480ca8', topColor: '#ff007f' },
-            { id: 'high_right', x: 940, y: 190, w: 170, h: 20, type: 'jumpthrough', color: '#480ca8', topColor: '#ff007f' }
+            { id: 'high_left', x: highMargin, y: 190, w: highLedgeW, h: 20, type: 'jumpthrough', color: '#312363', topColor: '#ff007f' },
+            { id: 'high_right', x: W - highMargin - highLedgeW, y: 190, w: highLedgeW, h: 20, type: 'jumpthrough', color: '#312363', topColor: '#ff007f' }
         ];
 
         // Respawn spots (safe elevated points)
         this.spawnPoints = [
-            { x: 600, y: 440 }, // Center
-            { x: 250, y: 320 }, // Left Mid
-            { x: 950, y: 320 }, // Right Mid
-            { x: 600, y: 190 }, // Top Center
-            { x: 170, y: 160 }, // High Left
-            { x: 1020, y: 160 } // High Right
+            { x: Math.round(W / 2), y: 440 }, // Center
+            { x: Math.round(midMargin + midLedgeW / 2), y: 320 }, // Left Mid
+            { x: Math.round(W - midMargin - midLedgeW / 2), y: 320 }, // Right Mid
+            { x: Math.round(W / 2), y: 190 }, // Top Center
+            { x: Math.round(highMargin + highLedgeW / 2), y: 160 }, // High Left
+            { x: Math.round(W - highMargin - highLedgeW / 2), y: 160 } // High Right
         ];
-
-        // Atmospheric Background: Floating ambient dust motes / glowing particles
-        this.ambientMotes = [];
-        const moteColors = ['#00f5d4', '#f72585', '#7209b7', '#4cc9f0', '#fee440'];
-        for (let i = 0; i < 35; i++) {
-            this.ambientMotes.push({
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
-                radius: Math.random() * 2.2 + 1.2,
-                speedY: Math.random() * 16 + 10,
-                speedX: (Math.random() - 0.5) * 8,
-                phase: Math.random() * Math.PI * 2,
-                color: moteColors[Math.floor(Math.random() * moteColors.length)],
-                alpha: Math.random() * 0.25 + 0.15
-            });
-        }
-        this.bgTime = 0;
     }
 
     getRandomSpawnPoint() {
@@ -98,92 +128,156 @@ class Arena {
         for (let i = 0; i < this.ambientMotes.length; i++) {
             const m = this.ambientMotes[i];
             m.y -= m.speedY * dt;
-            m.x += Math.sin(this.bgTime * 1.5 + m.phase) * (m.speedX * dt * 4);
+            m.x += Math.sin(this.bgTime * 1.2 + m.phase) * (m.speedX * dt * 4);
             if (m.y < 30) {
                 m.y = this.height - 30;
-                m.x = Math.random() * this.width;
+                m.x = Math.random() * (this.width + 400) - 200;
             }
         }
     }
 
-    draw(ctx) {
+    draw(ctx, camera) {
         ctx.save();
 
-        // 1. Polished Deep Blue/Purple Gradient Background
-        const bgGrad = ctx.createLinearGradient(0, 0, 0, this.height);
-        bgGrad.addColorStop(0, '#09041a');   // Deep space violet
-        bgGrad.addColorStop(0.35, '#13092e'); // Midnight arcade purple
-        bgGrad.addColorStop(0.75, '#1f0f47'); // Soft indigo
-        bgGrad.addColorStop(1, '#2d145c');   // Warm neon glow horizon
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, this.width, this.height);
+        const camOffsetX = camera ? (camera.x - this.width / 2) : 0;
+        const camOffsetY = camera ? (camera.y - this.height / 2) : 0;
 
-        // 2. Soft Atmospheric Center Spotlight Glow
-        const centerGlow = ctx.createRadialGradient(this.width / 2, 420, 50, this.width / 2, 420, 550);
-        centerGlow.addColorStop(0, 'rgba(114, 9, 183, 0.28)');
-        centerGlow.addColorStop(0.5, 'rgba(67, 97, 238, 0.12)');
-        centerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = centerGlow;
-        ctx.fillRect(0, 0, this.width, this.height);
+        const W = this.width;
+        const H = this.height;
 
-        // 3. Subtle Diagonal God Rays / Volumetric Light Shafts
-        const beamPulse = Math.sin(this.bgTime * 0.8) * 0.012 + 0.038;
+        // =========================================================================
+        // 1. BRIGHT BLUE SKY GRADIENT (Generous margin ensures 100% viewport coverage)
+        // =========================================================================
+        const skyGrad = ctx.createLinearGradient(0, -200, 0, H * 0.95);
+        skyGrad.addColorStop(0, '#3aa4f7');    // Rich cartoon sky blue
+        skyGrad.addColorStop(0.45, '#72c2fa'); // Cheerful light cyan
+        skyGrad.addColorStop(0.85, '#bae3ff'); // Soft glowing horizon
+        skyGrad.addColorStop(1, '#e3f3ff');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(-800, -800, W + 1600, H + 1600);
+
+        // =========================================================================
+        // 2. LAYER 1: PUFFY CARTOON CLOUDS (Subtle Parallax & Gentle Drift)
+        // =========================================================================
+        const cloudDrift = (this.bgTime * 6) % (W + 800);
+        const cloudP = camOffsetX * 0.05;
+
         ctx.save();
-        ctx.fillStyle = `rgba(180, 160, 255, ${beamPulse})`;
-        // Left Light Beam
+        this.drawCloudBank(ctx, -300 + cloudDrift - cloudP, 130, 1.25);
+        this.drawCloudBank(ctx, W * 0.35 + cloudDrift - cloudP, 95, 1.05);
+        this.drawCloudBank(ctx, -900 + cloudDrift - cloudP, 110, 1.15);
+        this.drawCloudBank(ctx, W * 0.82 + cloudDrift - cloudP, 140, 1.3);
+        ctx.restore();
+
+        // =========================================================================
+        // 3. LAYER 2: DISTANT LAYERED MOUNTAINS / HIGH HILLS (Atmospheric Haze)
+        // =========================================================================
+        const mtnP = camOffsetX * 0.12;
+        ctx.save();
+        ctx.fillStyle = '#b7dcfa';
         ctx.beginPath();
-        ctx.moveTo(180, 0);
-        ctx.lineTo(340, 0);
-        ctx.lineTo(580, this.height);
-        ctx.lineTo(380, this.height);
+        ctx.moveTo(-600, H + 200);
+        ctx.lineTo(-600, 390);
+        ctx.bezierCurveTo(-100 - mtnP, 340, W * 0.15 - mtnP, 300, W * 0.3 - mtnP, 340);
+        ctx.bezierCurveTo(W * 0.45 - mtnP, 410, W * 0.6 - mtnP, 310, W * 0.75 - mtnP, 300);
+        ctx.bezierCurveTo(W * 0.9 - mtnP, 380, W * 1.05 - mtnP, 330, W + 600, 370);
+        ctx.lineTo(W + 600, H + 200);
         ctx.closePath();
         ctx.fill();
-        // Right Light Beam
+
+        // Secondary soft mountain ridge
+        ctx.fillStyle = '#9eccf6';
         ctx.beginPath();
-        ctx.moveTo(860, 0);
-        ctx.lineTo(1020, 0);
-        ctx.lineTo(820, this.height);
-        ctx.lineTo(620, this.height);
+        ctx.moveTo(-600, H + 200);
+        ctx.lineTo(-600, 440);
+        ctx.bezierCurveTo(-80 - mtnP * 1.2, 380, W * 0.18 - mtnP * 1.2, 360, W * 0.35 - mtnP * 1.2, 380);
+        ctx.bezierCurveTo(W * 0.5 - mtnP * 1.2, 460, W * 0.68 - mtnP * 1.2, 380, W * 0.85 - mtnP * 1.2, 370);
+        ctx.bezierCurveTo(W * 0.98 - mtnP * 1.2, 430, W * 1.08 - mtnP * 1.2, 390, W + 600, 420);
+        ctx.lineTo(W + 600, H + 200);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
 
-        // 4. Subtle Decorative Backdrop Pillars & Archways (Depth)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
-        for (let x = 110; x < this.width - 100; x += 190) {
-            ctx.fillRect(x, 70, 70, this.height - 90);
-            ctx.beginPath();
-            ctx.arc(x + 35, 70, 35, Math.PI, 0);
-            ctx.fill();
+        // =========================================================================
+        // 4. LAYER 3: MIDDLE ROLLING HILLS WITH STYLIZED TREES
+        // =========================================================================
+        const midHillP = camOffsetX * 0.22;
+        ctx.save();
+        ctx.fillStyle = '#7ac098'; // Soft cartoon meadow green
+        ctx.beginPath();
+        ctx.moveTo(-600, H + 200);
+        ctx.lineTo(-600, 510);
+        ctx.bezierCurveTo(-100 - midHillP, 460, W * 0.2 - midHillP, 420, W * 0.4 - midHillP, 450);
+        ctx.bezierCurveTo(W * 0.6 - midHillP, 530, W * 0.8 - midHillP, 435, W + 600, 510);
+        ctx.lineTo(W + 600, H + 200);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stylized Cartoon "Lollipop" Trees along mid hills
+        const treeFracs = [0.08, 0.16, 0.25, 0.36, 0.64, 0.74, 0.84, 0.92];
+        for (let i = 0; i < treeFracs.length; i++) {
+            const trX = W * treeFracs[i];
+            this.drawCartoonTree(ctx, trX - midHillP, 445, 0.85, '#5a8d74', '#8edba8', '#67b884');
         }
+        ctx.restore();
 
-        // 5. Faint Neon Horizon Scanner Line at lower background
-        const scanY = 660 + Math.sin(this.bgTime * 0.5) * 8;
-        const lineGrad = ctx.createLinearGradient(100, scanY, this.width - 100, scanY);
-        lineGrad.addColorStop(0, 'rgba(0, 245, 212, 0)');
-        lineGrad.addColorStop(0.5, 'rgba(0, 245, 212, 0.08)');
-        lineGrad.addColorStop(1, 'rgba(247, 37, 133, 0)');
-        ctx.fillStyle = lineGrad;
-        ctx.fillRect(100, scanY, this.width - 200, 2);
+        // =========================================================================
+        // 5. LAYER 4: FOREGROUND NATURE HILLS WITH GRASS TUFTS & STONES
+        // =========================================================================
+        const foreHillP = camOffsetX * 0.35;
+        ctx.save();
 
-        // 6. Floating Ambient Sparkle / Dust Motes
+        // Primary rolling foreground hill
+        const foreGrad = ctx.createLinearGradient(0, 520, 0, H);
+        foreGrad.addColorStop(0, '#53ab76'); // Fresh cartoon grass green
+        foreGrad.addColorStop(1, '#3b875a');
+        ctx.fillStyle = foreGrad;
+        ctx.beginPath();
+        ctx.moveTo(-600, H + 200);
+        ctx.lineTo(-600, 580);
+        ctx.bezierCurveTo(-80 - foreHillP, 530, W * 0.22 - foreHillP, 510, W * 0.45 - foreHillP, 530);
+        ctx.bezierCurveTo(W * 0.68 - foreHillP, 600, W * 0.88 - foreHillP, 515, W + 600, 580);
+        ctx.lineTo(W + 600, H + 200);
+        ctx.closePath();
+        ctx.fill();
+
+        // Small cartoon pebbles/stones on hillside
+        this.drawCartoonPebbles(ctx, W * 0.12 - foreHillP, 590);
+        this.drawCartoonPebbles(ctx, W * 0.35 - foreHillP, 560);
+        this.drawCartoonPebbles(ctx, W * 0.62 - foreHillP, 610);
+        this.drawCartoonPebbles(ctx, W * 0.88 - foreHillP, 570);
+
+        // Cartoon grass tufts along the ridges
+        this.drawGrassTuft(ctx, W * 0.15 - foreHillP, 545, 1.0);
+        this.drawGrassTuft(ctx, W * 0.28 - foreHillP, 535, 1.1);
+        this.drawGrassTuft(ctx, W * 0.50 - foreHillP, 560, 0.9);
+        this.drawGrassTuft(ctx, W * 0.72 - foreHillP, 545, 1.15);
+        this.drawGrassTuft(ctx, W * 0.89 - foreHillP, 535, 1.0);
+        ctx.restore();
+
+        // =========================================================================
+        // 6. AMBIENT DRIFTING NATURE MOTES (Pollen / Dandelion Seeds)
+        // =========================================================================
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
         for (let i = 0; i < this.ambientMotes.length; i++) {
             const m = this.ambientMotes[i];
-            ctx.fillStyle = m.color;
             ctx.globalAlpha = m.alpha;
             ctx.beginPath();
             ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
             ctx.fill();
         }
-        ctx.globalAlpha = 1.0;
+        ctx.restore();
 
-        // 7. Draw Walls and Ceiling with vibrant border trim
+        // =========================================================================
+        // 7. ARENA BOUNDARY WALLS (Solid & Clean Frame)
+        // =========================================================================
         for (let i = 0; i < this.walls.length; i++) {
             const w = this.walls[i];
             ctx.fillStyle = w.color;
             ctx.fillRect(w.x, w.y, w.w, w.h);
 
-            // Glowing boundary lines
+            // Clean glowing arcade edge trim
             ctx.fillStyle = '#00f5d4';
             if (w.w < w.h) {
                 const trimX = (w.x < this.width / 2) ? w.x + w.w - 5 : w.x;
@@ -193,7 +287,9 @@ class Arena {
             }
         }
 
-        // 8. Draw Platforms
+        // =========================================================================
+        // 8. PLAYABLE ARENA PLATFORMS (Crisp High-Contrast Floating Decks)
+        // =========================================================================
         for (let i = 0; i < this.platforms.length; i++) {
             const p = this.platforms[i];
 
@@ -203,17 +299,121 @@ class Arena {
             ctx.roundRect(p.x, p.y, p.w, p.h, 6);
             ctx.fill();
 
-            // Neon glowing top rim
+            // Neon top cap
             ctx.fillStyle = p.topColor || '#ff007f';
             ctx.beginPath();
             ctx.roundRect(p.x, p.y, p.w, 6, [6, 6, 0, 0]);
             ctx.fill();
 
-            // Subtle highlight line
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            // Highlight line
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillRect(p.x + 8, p.y + 1, p.w - 16, 2);
         }
 
+        ctx.restore();
+    }
+
+    // Helper: Draw Stylized Puffy Cartoon Cloud Bank
+    drawCloudBank(ctx, cx, cy, scale = 1.0) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+
+        // Soft cloud shadow / underside
+        ctx.fillStyle = '#d7edfc';
+        ctx.beginPath();
+        ctx.arc(0, 10, 60, 0, Math.PI * 2);
+        ctx.arc(60, 8, 50, 0, Math.PI * 2);
+        ctx.arc(-55, 12, 45, 0, Math.PI * 2);
+        ctx.arc(115, 14, 40, 0, Math.PI * 2);
+        ctx.arc(-105, 16, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fluffy white top lobes
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 56, 0, Math.PI * 2);
+        ctx.arc(58, -2, 46, 0, Math.PI * 2);
+        ctx.arc(-52, 2, 42, 0, Math.PI * 2);
+        ctx.arc(112, 6, 36, 0, Math.PI * 2);
+        ctx.arc(-102, 8, 32, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // Helper: Draw Stylized Cartoon "Lollipop" Tree
+    drawCartoonTree(ctx, tx, ty, scale = 1.0, trunkColor = '#5a8d74', crownColor = '#8edba8', shadowColor = '#67b884') {
+        ctx.save();
+        ctx.translate(tx, ty);
+        ctx.scale(scale, scale);
+
+        // Slender trunk
+        ctx.fillStyle = trunkColor;
+        ctx.beginPath();
+        ctx.roundRect(-4, 0, 8, 38, 3);
+        ctx.fill();
+
+        // Round leafy crown (circular with subtle shadow underneath)
+        ctx.fillStyle = shadowColor;
+        ctx.beginPath();
+        ctx.arc(0, -6, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = crownColor;
+        ctx.beginPath();
+        ctx.arc(0, -10, 24, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Subtle soft highlight lobe
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.beginPath();
+        ctx.arc(-7, -17, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // Helper: Draw Cartoon Grass Tufts
+    drawGrassTuft(ctx, gx, gy, scale = 1.0) {
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.scale(scale, scale);
+
+        ctx.fillStyle = '#398b58';
+        // Left blade
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-12, -14, -16, -20);
+        ctx.quadraticCurveTo(-10, -10, -4, 0);
+        ctx.fill();
+
+        // Center blade
+        ctx.beginPath();
+        ctx.moveTo(-3, 0);
+        ctx.quadraticCurveTo(0, -18, 0, -26);
+        ctx.quadraticCurveTo(4, -14, 3, 0);
+        ctx.fill();
+
+        // Right blade
+        ctx.beginPath();
+        ctx.moveTo(2, 0);
+        ctx.quadraticCurveTo(12, -14, 16, -18);
+        ctx.quadraticCurveTo(8, -10, 5, 0);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // Helper: Draw Cartoon Pebbles / Stones
+    drawCartoonPebbles(ctx, px, py) {
+        ctx.save();
+        ctx.fillStyle = '#83a8ba';
+        ctx.beginPath();
+        ctx.ellipse(px, py, 9, 5, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(px + 14, py + 3, 6, 3.5, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(px - 10, py + 2, 5, 3, 0.3, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     }
 }

@@ -20,27 +20,29 @@ body, html {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #09041a;
+    background-color: #3aa4f7;
     font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     color: #ffffff;
 }
 
 #game-container {
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     height: 100dvh;
     max-width: 100vw;
     max-height: 100dvh;
     overflow: hidden;
-    margin: 0 auto;
+    margin: 0;
+    padding: 0;
+    background-color: #3aa4f7;
 }
 
 #game-canvas {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: #09041a;
+    background-color: #3aa4f7;
 }
 
 /* TOP HUD */
@@ -398,9 +400,9 @@ body.touch-device #mobile-controls {
     font-weight: 800;
     color: #00f5d4 !important;
     background: rgba(0, 245, 212, 0.12);
-    padding: 12px 18px;
-    border-radius: 12px;
-    margin-bottom: 26px !important;
+    padding: 14px 20px;
+    border-radius: 14px;
+    margin-bottom: 0 !important;
     letter-spacing: 0.5px;
 }
 
